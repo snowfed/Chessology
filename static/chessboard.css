@@ -1,0 +1,261 @@
+ .assigned {
+    /*background-color: #FDFD96;*/
+    /*border-color:; #ff0000;*/
+}
+.item {
+    width: 100%;
+    text-align: center;
+	font-size: 45px;
+	cursor: pointer;
+}
+
+/* Flash for warnings: Something went wrong! */
+ #warning {
+    color: red;
+    font-style: italic;
+}
+/* Flash for successful save to database */
+ #success {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    color: green;
+    font-style: italic;
+}
+#buttons {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.table {
+    border: 1px solid #eee;
+    width: 808px;
+    height: 560px;
+}
+
+/*.table-nonfluid {
+    /*width: auto;*/
+    /*border: none;*/
+/*    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;*/
+/*}*/
+
+.table td {
+    width: 60px;
+    height: 60px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.white-square {
+    background-color: white;
+    border-color: #ddd;
+    text-align: center;
+	vertical-align: middle;
+	border-width: 1px;
+}
+
+.grey-square {
+	background: #FFFFFF;
+	background:-moz-linear-gradient(top, #FFFFFF, #F4F4F4);
+	background:-webkit-gradient(linear,0 0, 0 100%, from(#FFFFFF), to(#F4F4F4));
+	-webkit-box-shadow: inset 0 0 4px 1px #ddd;
+    box-shadow: inset 0 0 4px 1px #ddd;
+    border-color: #ddd;
+}
+
+.black-square {
+	background: #ccc;
+	background:-moz-linear-gradient(top, #ccc, #eee);
+	background:-webkit-gradient(linear,0 0, 0 100%, from(#ccc), to(#eee));
+	-webkit-box-shadow: inset 0 0 4px 1px #bbb;
+    box-shadow: inset 0 0 4px 1px #bbb;
+    border-color: #bbb;
+}
+
+.updated-square {
+    border-color: #cf0;
+}
+
+.over-red {
+    border-color: red;
+}
+
+.over-green {
+    border-color: green;
+}
+
+/*.white-square.updated-square {
+    border-color: #cf0;
+}
+.grey-square.updated-square {
+    border-color: #cf0;
+}
+.black-square.updated-square {
+    border-color: #cf0;
+}
+
+.white-square.over-red {
+    border-color: red;
+}
+.grey-square.over-red {
+    border-color: red;
+}
+.black-square.over-red {
+    border-color: red;
+}*/
+
+.notation {
+    font-size: 30px;
+}
+
+/*
+td {
+	background:#fff;
+	background:-moz-linear-gradient(top, #fff, #eee);
+	background:-webkit-gradient(linear,0 0, 0 100%, from(#fff), to(#eee));
+	box-shadow:inset 0 0 0 1px #fff;
+	-moz-box-shadow:inset 0 0 0 1px #fff;
+	-webkit-box-shadow:inset 0 0 0 1px #fff;
+	height:60px;
+	text-align:center;
+	width:60px;
+	vertical-align: middle !important;
+}
+tr:nth-child(odd) td:nth-child(-2n+8),
+tr:nth-child(even) td:nth-child(-2n+9) {
+	background:#ccc;
+	background:-moz-linear-gradient(top, #ccc, #eee);
+	background:-webkit-gradient(linear,0 0, 0 100%, from(#ccc), to(#eee));
+	box-shadow:inset 0 0 10px rgba(0,0,0,.4);
+	-moz-box-shadow:inset 0 0 10px rgba(0,0,0,.4);
+	-webkit-box-shadow:inset 0 0 10px rgba(0,0,0,.4);
+}
+
+td.white_square {
+	background:white !important;
+	box-shadow:inset 0 0 0 1px #fff !important;
+	-moz-box-shadow:inset 0 0 0 1px #fff !important;
+	-webkit-box-shadow:inset 0 0 0 1px #fff !important;
+	height:60px;
+	text-align:center;
+	vertical-align:middle;
+	font-size: 30px;
+	width:60px;
+	cursor: default;
+}*/
+
+/* SNOWFED BUTTONS */
+.snowfedSkyButton {
+	-moz-box-shadow:inset 0px 1px 0px 0px #dcecfb;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #dcecfb;
+	box-shadow:inset 0px 1px 0px 0px #dcecfb;
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #bddbfa), color-stop(1, #80b5ea));
+	background:-moz-linear-gradient(top, #bddbfa 5%, #80b5ea 100%);
+	background:-webkit-linear-gradient(top, #bddbfa 5%, #80b5ea 100%);
+	background:-o-linear-gradient(top, #bddbfa 5%, #80b5ea 100%);
+	background:-ms-linear-gradient(top, #bddbfa 5%, #80b5ea 100%);
+	background:linear-gradient(to bottom, #bddbfa 5%, #80b5ea 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#bddbfa', endColorstr='#80b5ea',GradientType=0);
+	background-color:#bddbfa;
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	border:1px solid #84bbf3;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	padding:6px 24px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #528ecc;
+	min-width: 123px;
+}
+.snowfedSkyButton:hover {
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #80b5ea), color-stop(1, #bddbfa));
+	background:-moz-linear-gradient(top, #80b5ea 5%, #bddbfa 100%);
+	background:-webkit-linear-gradient(top, #80b5ea 5%, #bddbfa 100%);
+	background:-o-linear-gradient(top, #80b5ea 5%, #bddbfa 100%);
+	background:-ms-linear-gradient(top, #80b5ea 5%, #bddbfa 100%);
+	background:linear-gradient(to bottom, #80b5ea 5%, #bddbfa 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#80b5ea', endColorstr='#bddbfa',GradientType=0);
+	background-color:#80b5ea;
+}
+.snowfedSkyButton:active {
+	position:relative;
+	top:1px;
+}
+
+/* SNOWFED CHECKBOXES */
+/* Base for label styling */
+[type="checkbox"]:not(:checked),
+[type="checkbox"]:checked {
+  position: absolute;
+  left: -9999px;
+}
+[type="checkbox"]:not(:checked) + label,
+[type="checkbox"]:checked + label {
+  position: relative;
+  padding-left: 25px;
+  padding-right: 25px;
+  cursor: pointer;
+}
+
+/* checkbox aspect */
+[type="checkbox"]:not(:checked) + label:before,
+[type="checkbox"]:checked + label:before {
+  content: '';
+  position: absolute;
+  left:0; top: 2px;
+  width: 17px; height: 17px;
+  border: 1px solid #aaa;
+  background: #f8f8f8;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.3)
+}
+/* checked mark aspect */
+[type="checkbox"]:not(:checked) + label:after,
+[type="checkbox"]:checked + label:after {
+  content: '✔';
+  position: absolute;
+  top: 3px; left: 4px;
+  font-size: 18px;
+  line-height: 0.8;
+  color: #3860AD;
+  transition: all .2s;
+}
+/* checked mark aspect changes */
+[type="checkbox"]:not(:checked) + label:after {
+  opacity: 0;
+  transform: scale(0);
+}
+[type="checkbox"]:checked + label:after {
+  opacity: 1;
+  transform: scale(1);
+}
+/* disabled checkbox */
+[type="checkbox"]:disabled:not(:checked) + label:before,
+[type="checkbox"]:disabled:checked + label:before {
+  box-shadow: none;
+  border-color: #bbb;
+  background-color: #ddd;
+}
+[type="checkbox"]:disabled:checked + label:after {
+  color: #999;
+}
+[type="checkbox"]:disabled + label {
+  color: #aaa;
+}
+/* accessibility */
+[type="checkbox"]:checked:focus + label:before,
+[type="checkbox"]:not(:checked):focus + label:before {
+  border: 1px dotted blue;
+}
+
+/* hover style just for information */
+label:hover:before {
+  border: 1px solid #4778d9!important;
+  display: block;
+}
