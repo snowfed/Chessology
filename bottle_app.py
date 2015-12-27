@@ -1,11 +1,14 @@
 #import sys
 #reload(sys)
 #sys.setdefaultencoding('utf-8')
+import os.path
 from bottle import default_app, route, static_file, get, post, request
+
+bottle_app_dir = os.path.dirname(os.path.abspath(__file__))
 
 @route('/')
 def main_page():
-    return static_file("index.html", root='/home/chessology/mysite') #html
+    return static_file("index.html", root=bottle_app_dir)
 
 @route('/hello')
 def hello():
@@ -13,14 +16,14 @@ def hello():
 
 @route('/static/:path#.+#', name='static')
 def static(path):
-    return static_file(path, root='/home/chessology/mysite/static')
+    return static_file(path, root=os.path.join(bottle_app_dir, 'static'))
 
 @post('/sendrecv')
 def handle_sendrecv():
     filename = request.forms.get('filename')
     if filename == None or filename == '':
         filename = 'chessboard.txt'
-    filename = "/home/chessology/mysite/" + filename
+    filename = os.path.join(bottle_app_dir, filename)
     text_board = request.forms.get('chessboard')
     if text_board == None or text_board == '':
         text_file = open(filename, 'r')
