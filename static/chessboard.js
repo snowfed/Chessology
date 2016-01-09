@@ -58,12 +58,15 @@ function initial_chessboard_setup ()
 
 function chessboard_to_html ()
 {
-    $(".piece").remove();
 	var cnt = 0;
 	for (var iy = 0; iy < 8; ++iy) {
 		for (var ix = 0; ix < nxsquares; ++ix) {
 			var ipiece = chessboard[cnt++];
-			if (ipiece >= 0) set_td_text(chess_pieces[ipiece], ix + 1, iy + 1);
+			if (ipiece >= 0) {
+				set_td_text(chess_pieces[ipiece], ix + 1, iy + 1);
+			} else {
+				set_td_text(null, ix + 1, iy + 1);
+			}
 		}
 	}
 	for (var ix = 0; ix < 8; ++ix) {
@@ -113,12 +116,16 @@ function piece_move (old_td_id, new_td_id)
 	var squares = [old_td_id.split(" "), new_td_id.split(" ")];
 	for (var i = 0; i < 2; ++i) {
 		for (var j = 0; j < 2; ++j) {
-			squares[i][j] = parseInt(squares[i][j]);
+			squares[i][j] = parseInt(squares[i][j]) - 1;
+			if (squares[i][j] < 0) {
+				console.log("Error in piece_move: accessing wrong squares.");
+				return false;
+			}
 		}
 		if (flipped) {
-			if (squares[i][0] > 0) squares[i][0] = 9 - squares[i][0];
+			squares[i][0] = 7 - squares[i][0];
 		} else {
-			if (squares[i][1] >= 1 && squares[i][1] <= 8) squares[i][1] = 9 - squares[i][1];
+			if (squares[i][1] < 8) squares[i][1] = 7 - squares[i][1];
 		}
 	}
 	var isquare_old = nxsquares * squares[0][0] + squares[0][1];
@@ -134,27 +141,30 @@ function piece_move (old_td_id, new_td_id)
 		if (ipiece == 0 || ipiece == 6 || ipiece_captured == 0 || ipiece_captured == 6) {
 			console.log("Error in piece_move(): you cannot move kings off the board.");
 			return false;
-		} else if (ipiece <= 5 && ipiece_captured <= 5 || ipiece > 5 && ipiece_captured > 5) {
+		} else if (ipiece <= 5 && ipiece_captured >= 0 && ipiece_captured <= 5 || ipiece > 5 && ipiece_captured > 5) {
 			console.log("Error in piece_move(): you cannot capture pieces of your own color.");
 			return false;
 		}
-		set_td_text(null, squares[0][1], squares[0][0]);
 		chessboard[isquare_new] = ipiece;
-		$(".updated-square").removeClass("updated-square"); // FIXME: remove class selector
-		set_td_text(chess_pieces[ipiece], squares[1][1], squares[1][0], updated_square = true);
-		empty_square = get_empty_square();
-		if (empty_square == null) {
-			console.log("Error in piece_move(): failed to find an empty square.");
-			set_td_text(chess_pieces[ipiece], squares[0][1], squares[0][0]);
-			set_td_text(chess_pieces[ipiece_captured], squares[1][1], squares[1][0]);
-			return false;
+		//$(".updated-square").removeClass("updated-square"); // FIXME: remove class selector
+		set_td_text(chess_pieces[ipiece], squares[1][1] + 1, squares[1][0] + 1);
+		if (ipiece_captured >= 0) {
+			empty_square = get_empty_square();
+			if (empty_square == null) {
+				console.log("Error in piece_move(): failed to find an empty square.");
+				set_td_text(chess_pieces[ipiece_captured], squares[1][1] + 1, squares[1][0] + 1);
+				return false;
+			}
+			chessboard[empty_square[0]] = ipiece_captured;
+			set_td_text(chess_pieces[ipiece_captured], empty_square[1] + 1, empty_square[2] + 1);
 		}
-		chessboard[empty_square[0]] = ipiece_captured;
-		set_td_text(chess_pieces[ipiece_captured], empty_square[1], empty_square[2], updated_square = true);
 	}
+	set_td_text(null, squares[0][1] + 1, squares[0][0] + 1);
+	chessboard[isquare_old] = -1;
+	return true;
 }
 
-function set_td_text (html_text, ix, iy, updated_square)
+function set_td_text (html_text, ix, iy)
 {
 	if (flipped) {
 		if (iy > 0) iy = 9 - iy;
@@ -165,12 +175,21 @@ function set_td_text (html_text, ix, iy, updated_square)
 	if (html_text != null) {
 		if (ix > 0 && iy > 0) {
 			square.html("<div class='piece'>" + html_text + "</div>").children().draggable({revert: true});
-			if (updated_square != undefined && updated_square) {
-				square.children().addClass("updated-square");
-			}
+			//if (updated_square != undefined && updated_square) {
+			//	square.children().addClass("updated-square");
+			//}
 		} else {
 			square.html("<div class='coord'>" + html_text + "</div>");
 		}
+	}
+	if (ix > 0 && iy > 0) {
+		square.droppable({
+			tolerance: "pointer",
+			drop: function (ev, ui) {
+				var is_done = piece_move($(ui.draggable).parent().attr("id"), iy + " " + ix);
+				console.log("drop is done: " + is_done);
+			}
+		});
 	}
 }
 
