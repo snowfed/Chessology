@@ -10,6 +10,10 @@ bottle_app_dir = os.path.dirname(os.path.abspath(__file__))
 def main_page():
     return static_file("index.html", root=bottle_app_dir)
 
+@route('/favicon.ico')
+def favicon():
+    return static_file("static/favicon.ico", root=bottle_app_dir)
+
 @route('/hello')
 def hello():
     return "Hello World!"
