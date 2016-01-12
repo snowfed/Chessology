@@ -2,6 +2,7 @@
  * (c) snowfed, 2016
  */
 
+var filename = 'chessboard7.txt'
 var flipped = true;
 var nxsquares = 12;
 var chessboard = new Array (8 * nxsquares);
@@ -9,12 +10,37 @@ var chessboard_saved = null;
 var chess_pieces = ["&#9812;", "&#9813;", "&#9814;", "&#9815;", "&#9816;", "&#9817;", // white
 	"&#9818;", "&#9819;", "&#9820;", "&#9821;", "&#9822;", "&#9823;"]; // black
 var move_number = 0;
+var sendrecv_state = 0;
 
-function playPieceDropSound()
+function play_piece_drop_sound()
 {
     if (document.getElementById('play_sound').checked) {
         $("#piece_moved").trigger("play");
     }
+}
+
+function chessboard_to_string ()
+{
+	var board_code = chessboard.slice();
+	for (var i = 0; i < board_code.length; ++i) {
+		board_code[i] += 'b'.charCodeAt(0);
+	}
+    var move_bytes = [((move_number >> 6) & 0x3F) + 0x21, (move_number & 0x3F) + 0x21];
+    return String.fromCharCode.apply(null, move_bytes) + String.fromCharCode.apply(null, board_code);
+}
+
+function string_to_chessboard (board_string)
+{
+	var imove = (board_string.charCodeAt(0) - 0x21) * 0x40 + board_string.charCodeAt(1) - 0x21;
+	if (move_number >= imove) {
+		return;
+	}
+	var board_code = chessboard.slice();
+	for (var i = 0; i < board_code.length; ++i) {
+		board_code[i] = board_string.charCodeAt(i+2) - 'a'.charCodeAt(0);
+	}
+	update_chessboard(board_code);
+	move_number = imove;
 }
 
 function initial_chessboard_setup ()
@@ -54,6 +80,7 @@ function initial_chessboard_setup ()
 	if (chessboard_saved == null) {
 		chessboard_saved = chessboard.slice();
 	}
+	move_number = 0;
 }
 
 function chessboard_to_html ()
@@ -81,6 +108,7 @@ function update_chessboard (chessboard_update)
 {
 	for (var iy = 0; iy < 8; ++iy) {
 		for (var ix = 0; ix < nxsquares; ++ix) {
+			var cnt = ix + iy * nxsquares;
 			var ipiece_update = chessboard_update[cnt];
 			var ipiece = chessboard[cnt];
 			if (ipiece != ipiece_update) {
@@ -161,6 +189,9 @@ function piece_move (old_td_id, new_td_id)
 	set_td_text(null, squares[0][1] + 1, squares[0][0] + 1);
 	chessboard[isquare_new] = ipiece;
 	chessboard[isquare_old] = -1;
+	++move_number;
+	play_piece_drop_sound();
+	console.log('Move #' + move_number + ' (local).');
 	return true;
 }
 
@@ -192,14 +223,69 @@ function set_td_text (html_text, ix, iy)
 	}
 }
 
+function send_to_server ()
+{
+    $("#warning").empty();
+    $.post( "../sendrecv", { chessboard: chessboard_to_string(), filename: filename } );
+    sendrecv_state = 5;
+}
+
+function load_from_server (manual)
+{
+    manual = manual || false;
+    if (!manual && !document.getElementById('auto_sendrecv').checked) {
+        return;
+    }
+    $("#warning").empty();
+    $.post( "../sendrecv", { filename: filename }, function( data ) {
+		var old_move_number = move_number;
+		string_to_chessboard(data);
+        if (move_number > old_move_number) {
+			play_piece_drop_sound();
+			console.log('Move #' + move_number + ' (remote).');
+		}
+	});
+}
+
+function timed_sendrecv ()
+{
+    if (sendrecv_state == 0) {
+        load_from_server();
+    } else if (sendrecv_state > 0) {
+        --sendrecv_state;
+    } else if (document.getElementById('auto_sendrecv').checked) {
+        send_to_server();
+    }
+    var now = new Date();
+    if (flipped) {
+        setTimeout(timedSendRecv, 1500 - now.getMilliseconds());
+    } else if (now.getMilliseconds() > 500){
+        setTimeout(timedSendRecv, 2000 - now.getMilliseconds());
+    } else {
+        setTimeout(timedSendRecv, 1000 - now.getMilliseconds());
+    }
+}
+
 // Entry point of the jQuery action
 $(function () {
-	var i = 0;
+    $("#discard").click(function () {
+		update_chessboard(chessboard_saved);
+    });
+    $("#save").click(function () {
+        chessboard_saved = chessboard.slice();
+    });
+    $("#send").click(function () {
+        send_to_server();
+    });
     $("#receive").click(function () {
-		set_td_text(i++, 1, 3);
+        load_from_server(true);
     });
     $("#flip").click(function () {
         flipped = !flipped;
+		chessboard_to_html();
+    });
+    $("#reset").click(function () {
+		initial_chessboard_setup();
 		chessboard_to_html();
     });
 
