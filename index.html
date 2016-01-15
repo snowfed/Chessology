@@ -12,31 +12,6 @@
 	<script src="/static/chessboard.js"></script>
 </head>
 <body>
-	<div align="left">
-		<p class="text-success text-center" id="success"></p>
-		<table class="table" cellspacing="0" cellpadding="0">
-			<tbody id="chessboard_tbody_id"></tbody>
-		</table>
-		<div id="buttons">
-			<button class="snowfedSkyButton" id="send">Send</button>
-			<button class="snowfedSkyButton" id="receive">Receive</button>
-			<button class="snowfedSkyButton" id="save">Save</button>
-			<button class="snowfedSkyButton" id="discard">Discard Changes</button>
-			<button class="snowfedSkyButton" id="flip">Flip Sides</button>
-			<button class="snowfedSkyButton" id="reset">Reset</button>
-		</div>
-        <input type="checkbox" id="auto_sendrecv"/>
-        <label for="auto_sendrecv"><font size="4" color="#3366FF">Automatic Send/Receive</font></label>
-
-        <input type="checkbox" id="play_sound" checked="checked"/>
-        <label for="play_sound"><font size="4" color="#3366FF">Play Sound</font></label>
-
-        <p id="warning" style="text-align:left"></p>
-        <audio preload id="piece_moved">
-            <source src="http://chessology.pythonanywhere.com/static/piece_dropped.mp3", type="audio/mpeg">
-        </audio>
-	</div>
-
 	<table class="table" cellspacing="0" cellpadding="0">
 		<tr>
 			<td class="dead_square" id = "0 0"></td>
@@ -173,4 +148,30 @@
 			<td class="dead_square" id = "8 11"></td>
 			<td class="dead_square" id = "8 12"></td>
 		</tr>
-	</table></body>
+	</table>
+
+	<div align="left">
+		<p class="text-success text-center" id="success"></p>
+		<table class="table" cellspacing="0" cellpadding="0">
+			<tbody id="chessboard_tbody_id"></tbody>
+		</table>
+		<div id="buttons">
+			<button class="snowfedSkyButton" id="send">Send</button>
+			<button class="snowfedSkyButton" id="receive">Receive</button>
+			<button class="snowfedSkyButton" id="save">Save</button>
+			<button class="snowfedSkyButton" id="discard">Discard Changes</button>
+			<button class="snowfedSkyButton" id="flip">Flip Sides</button>
+			<button class="snowfedSkyButton" id="reset">Reset</button>
+		</div>
+        <input type="checkbox" id="auto_sendrecv"/>
+        <label for="auto_sendrecv"><font size="4" color="#3366FF">Automatic Send/Receive</font></label>
+
+        <input type="checkbox" id="play_sound" checked="checked"/>
+        <label for="play_sound"><font size="4" color="#3366FF">Play Sound</font></label>
+
+        <p id="warning" style="text-align:left"></p>
+        <audio preload id="piece_moved">
+            <source src="/static/piece_dropped.mp3", type="audio/mpeg">
+        </audio>
+	</div>
+</body>

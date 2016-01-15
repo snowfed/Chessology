@@ -37,7 +37,7 @@ function string_to_chessboard (board_string)
 	}
 	var board_code = chessboard.slice();
 	for (var i = 0; i < board_code.length; ++i) {
-		board_code[i] = board_string.charCodeAt(i+2) - 'a'.charCodeAt(0);
+		board_code[i] = board_string.charCodeAt(i+2) - 'b'.charCodeAt(0);
 	}
 	update_chessboard(board_code);
 	move_number = imove;
@@ -190,6 +190,7 @@ function piece_move (old_td_id, new_td_id)
 	chessboard[isquare_new] = ipiece;
 	chessboard[isquare_old] = -1;
 	++move_number;
+	sendrecv_state = -1;
 	play_piece_drop_sound();
 	console.log('Move #' + move_number + ' (local).');
 	return true;
@@ -258,11 +259,11 @@ function timed_sendrecv ()
     }
     var now = new Date();
     if (flipped) {
-        setTimeout(timedSendRecv, 1500 - now.getMilliseconds());
+        setTimeout(timed_sendrecv, 1500 - now.getMilliseconds());
     } else if (now.getMilliseconds() > 500){
-        setTimeout(timedSendRecv, 2000 - now.getMilliseconds());
+        setTimeout(timed_sendrecv, 2000 - now.getMilliseconds());
     } else {
-        setTimeout(timedSendRecv, 1000 - now.getMilliseconds());
+        setTimeout(timed_sendrecv, 1000 - now.getMilliseconds());
     }
 }
 
@@ -291,4 +292,5 @@ $(function () {
 
 	initial_chessboard_setup();
 	chessboard_to_html();
+	timed_sendrecv();
 });
