@@ -11,6 +11,7 @@ var chess_pieces = ["&#9812;", "&#9813;", "&#9814;", "&#9815;", "&#9816;", "&#98
 	"&#9818;", "&#9819;", "&#9820;", "&#9821;", "&#9822;", "&#9823;"]; // black
 var move_number = 0;
 var sendrecv_state = 0;
+var last_square = "Z0";
 
 function play_piece_drop_sound()
 {
@@ -26,7 +27,8 @@ function chessboard_to_string ()
 		board_code[i] += 'b'.charCodeAt(0);
 	}
     var move_bytes = [((move_number >> 6) & 0x3F) + 0x21, (move_number & 0x3F) + 0x21];
-    return String.fromCharCode.apply(null, move_bytes) + String.fromCharCode.apply(null, board_code);
+    return String.fromCharCode.apply(null, move_bytes) +
+		String.fromCharCode.apply(null, board_code) + last_square;
 }
 
 function string_to_chessboard (board_string)
@@ -38,6 +40,9 @@ function string_to_chessboard (board_string)
 	var board_code = chessboard.slice();
 	for (var i = 0; i < board_code.length; ++i) {
 		board_code[i] = board_string.charCodeAt(i+2) - 'b'.charCodeAt(0);
+	}
+	if (board_string.length >= board_code.length + 4) {
+		update_last_square(board_string.slice(board_code.length + 2, board_code.length + 4));
 	}
 	update_chessboard(board_code);
 	move_number = imove;
@@ -102,6 +107,25 @@ function chessboard_to_html ()
 	for (var iy = 1; iy < 9; ++iy) {
 		set_td_text(iy, 0, iy);
 	}
+}
+
+function update_last_square (new_last_square)
+{
+	$(".last_square").removeClass("last_square");
+	var ix = new_last_square.charCodeAt(0) - "A".charCodeAt(0) + 1;
+	var iy = new_last_square.charCodeAt(1) - "1".charCodeAt(0) + 1;
+	console.log(ix + " " + iy);
+	if (ix <= 0 || ix > nxsquares || iy <= 0 || iy > 8) {
+		console.log("Unknown last square: " + new_last_square + ".");
+		return;
+	}
+	if (flipped) {
+		iy = 9 - iy;
+	} else if (ix <= 8) {
+		ix = 9 - ix;
+	}
+	$("[id = '" + iy + " " + ix + "']").addClass("last_square");
+	last_square = new_last_square;
 }
 
 function update_chessboard (chessboard_update)
@@ -190,6 +214,8 @@ function piece_move (old_td_id, new_td_id)
 	chessboard[isquare_new] = ipiece;
 	chessboard[isquare_old] = -1;
 	++move_number;
+	update_last_square(String.fromCharCode.apply(null, [squares[1][1] + "A".charCodeAt(0), squares[1][0] + "1".charCodeAt(0)]));
+	console.log(last_square);
 	sendrecv_state = -1;
 	play_piece_drop_sound();
 	console.log('Move #' + move_number + ' (local).');
@@ -271,6 +297,7 @@ function timed_sendrecv ()
 $(function () {
     $("#discard").click(function () {
 		update_chessboard(chessboard_saved);
+		update_last_square("Z0");
     });
     $("#save").click(function () {
         chessboard_saved = chessboard.slice();
@@ -284,10 +311,12 @@ $(function () {
     $("#flip").click(function () {
         flipped = !flipped;
 		chessboard_to_html();
+		update_last_square(last_square);
     });
     $("#reset").click(function () {
 		initial_chessboard_setup();
 		chessboard_to_html();
+		update_last_square("Z0");
     });
 
 	initial_chessboard_setup();

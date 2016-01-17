@@ -1,8 +1,3 @@
- .assigned {
-    /*background-color: #FDFD96;*/
-    /*border-color:; #ff0000;*/
-}
-
 .piece {
     width: 100%;
     text-align: center;
@@ -41,12 +36,12 @@
     margin-bottom: 10px;
 }
 
-/*
+
 .table {
     border: 1px solid #eee;
     width: 808px;
     height: 560px;
-}*/
+}
 
 /*.table-nonfluid {
     /*width: auto;*/
@@ -81,8 +76,8 @@
 	background:-webkit-gradient(linear,0 0, 0 100%, from(#FFFFFF), to(#F4F4F4));
 	-webkit-box-shadow: inset 0 0 4px 1px #ddd;
     box-shadow: inset 0 0 4px 1px #ddd;
-    border-color: #ddd;
 }
+.white_square:not(.last_square) { border-color: #ddd }
 
 .black_square {
 	background: #ccc;
@@ -90,14 +85,14 @@
 	background:-webkit-gradient(linear,0 0, 0 100%, from(#ccc), to(#eee));
 	-webkit-box-shadow: inset 0 0 4px 1px #bbb;
     box-shadow: inset 0 0 4px 1px #bbb;
-    border-color: #bbb;
 }
+.black_square:not(.last_square) { border-color: #bbb }
 
-.updated-square {
+.last_square {
     border-color: #cf0;
 }
 
-.over-red {
+/*.over-red {
     border-color: red;
 }
 
@@ -105,7 +100,7 @@
     border-color: green;
 }
 
-/*.white-square.updated-square {
+.white-square.updated-square {
     border-color: #cf0;
 }
 .grey-square.updated-square {
