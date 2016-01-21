@@ -115,6 +115,26 @@ function update_last_square (new_last_square)
 	var ix = new_last_square.charCodeAt(0) - "A".charCodeAt(0) + 1;
 	var iy = new_last_square.charCodeAt(1) - "1".charCodeAt(0) + 1;
 	if (ix <= 0 || ix > nxsquares || iy <= 0 || iy > 8) {
+		if (new_last_square == "oW" || new_last_square == "oB" ||
+			new_last_square == "OW" || new_last_square == "OB")
+		{
+			iy = (new_last_square.charAt(1) == 'W') ? 1 : 8;
+			if (new_last_square.charAt(0) == 'O') {
+				ix = [3, 4];
+			} else {
+				ix = [7, 6];
+			}
+			if (flipped) {
+				iy = 9 - iy;
+			} else {
+				ix[0] = 9 - ix[0];
+				ix[1] = 9 - ix[1];
+			}
+			$("[id = '" + iy + " " + ix[0] + "']").addClass("last_square");
+			$("[id = '" + iy + " " + ix[1] + "']").addClass("last_square");
+			last_square = new_last_square;
+			return;
+		}
 		console.log("Unknown last square: " + new_last_square + ".");
 		return;
 	}
@@ -162,9 +182,47 @@ function get_empty_square (is_white)
 	return null;
 }
 
+function try_castling (squares, is_white)
+{
+	var y = 0;
+	var offset = 0;
+	var rook_code = 2;
+	var tag = 'W';
+	if (!is_white) {
+		y = 7;
+		offset = nxsquares * 7;
+		rook_code = 8;
+		tag = 'B';
+	}
+	if (squares[0][1] != 4 || squares[1][1] != 2 && squares[1][1] != 6) return null; // X
+	if (squares[0][0] != y || squares[1][0] != y) return null; // Y
+	var irook_old = 0;
+	var irook_new = 3;
+	if (squares[1][1] == 6) {
+		irook_old = 7;
+		irook_new = 5;
+		tag = 'o' + tag;
+	} else {
+		tag = 'O' + tag;
+	}
+	var offset = nxsquares * y;
+	if (chessboard[offset + irook_old] != rook_code) return null;
+	var i1 = Math.min(irook_old, squares[0][1]) + 1;
+	var i2 = Math.max(irook_old, squares[0][1]) - 1;
+	for (var i = i1; i <= i2; ++i) {
+		if (chessboard[offset + i] >= 0) return null;
+	}
+	chessboard[offset + irook_old] = -1;
+	chessboard[offset + irook_new] = rook_code;
+	set_td_text(null, irook_old + 1, y + 1);
+	set_td_text(chess_pieces[rook_code], irook_new + 1, y + 1);
+	return tag;
+}
+
 function piece_move (old_td_id, new_td_id)
 {
 	var squares = [old_td_id.split(" "), new_td_id.split(" ")];
+	var tag = null;
 	for (var i = 0; i < 2; ++i) {
 		for (var j = 0; j < 2; ++j) {
 			squares[i][j] = parseInt(squares[i][j]) - 1;
@@ -195,6 +253,8 @@ function piece_move (old_td_id, new_td_id)
 		} else if (ipiece <= 5 && ipiece_captured >= 0 && ipiece_captured <= 5 || ipiece > 5 && ipiece_captured > 5) {
 			console.log("Error in piece_move(): you cannot capture pieces of your own color.");
 			return false;
+		} else if ((ipiece == 0 || ipiece == 6) && ipiece_captured < 0) {
+			tag = try_castling(squares, (ipiece == 0));
 		}
 		//$(".updated-square").removeClass("updated-square"); // FIXME: remove class selector
 		set_td_text(chess_pieces[ipiece], squares[1][1] + 1, squares[1][0] + 1);
@@ -213,7 +273,8 @@ function piece_move (old_td_id, new_td_id)
 	chessboard[isquare_new] = ipiece;
 	chessboard[isquare_old] = -1;
 	++move_number;
-	update_last_square(String.fromCharCode.apply(null, [squares[1][1] + "A".charCodeAt(0), squares[1][0] + "1".charCodeAt(0)]));
+	if (tag == null) tag = String.fromCharCode.apply(null, [squares[1][1] + "A".charCodeAt(0), squares[1][0] + "1".charCodeAt(0)]);
+	update_last_square(tag);
 	sendrecv_state = -1;
 	play_piece_drop_sound();
 	console.log('Move #' + move_number + ': ' + last_square + ' (local).');
