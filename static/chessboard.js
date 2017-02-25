@@ -9,15 +9,19 @@ var chessboard = new Array (8 * nxsquares);
 var chessboard_saved = null;
 var chess_pieces = ["&#9812;", "&#9813;", "&#9814;", "&#9815;", "&#9816;", "&#9817;", // white
 	"&#9818;", "&#9819;", "&#9820;", "&#9821;", "&#9822;", "&#9823;"]; // black
+var chess_pieces_txt = ["wK", "wQ", "wR", "wB", "wN", "wP", // white
+	"bK", "bQ", "bR", "bB", "bN", "bP"] // black
+var chess_pieces_names = {K: "king  ", Q: "queen ", R: "rook  ", B: "bishop", N: "knight", P: "pawn  "};
 var move_number = 0;
 var sendrecv_state = 0;
 var last_square = "Z0";
+var list_of_moves = "";
 
 function play_piece_drop_sound()
 {
-    if (document.getElementById('play_sound').checked) {
-        $("#piece_moved").trigger("play");
-    }
+	if (document.getElementById('play_sound').checked) {
+		$("#piece_moved").trigger("play");
+	}
 }
 
 function chessboard_to_string ()
@@ -26,9 +30,9 @@ function chessboard_to_string ()
 	for (var i = 0; i < board_code.length; ++i) {
 		board_code[i] += 'b'.charCodeAt(0);
 	}
-    var move_bytes = [((move_number >> 6) & 0x3F) + 0x21, (move_number & 0x3F) + 0x21];
-    return String.fromCharCode.apply(null, move_bytes) +
-		String.fromCharCode.apply(null, board_code) + last_square;
+	var move_bytes = [((move_number >> 6) & 0x3F) + 0x21, (move_number & 0x3F) + 0x21];
+	return String.fromCharCode.apply(null, move_bytes) +
+		String.fromCharCode.apply(null, board_code) + last_square + list_of_moves;
 }
 
 function string_to_chessboard (board_string)
@@ -41,11 +45,51 @@ function string_to_chessboard (board_string)
 	for (var i = 0; i < board_code.length; ++i) {
 		board_code[i] = board_string.charCodeAt(i+2) - 'b'.charCodeAt(0);
 	}
-	if (board_string.length >= board_code.length + 4) {
-		update_last_square(board_string.slice(board_code.length + 2, board_code.length + 4));
-	}
+	list_of_moves = board_string.slice(board_code.length + 4);
+	update_last_square(board_string.slice(board_code.length + 2, board_code.length + 4));
 	update_chessboard(board_code);
 	move_number = imove;
+}
+
+function human_chess_piece (chess_piece_txt)
+{
+	var color = 'purple';
+	if (chess_piece_txt[0] == 'w')
+		color = 'white';
+	else if (chess_piece_txt[0] == 'b')
+		color = 'black';
+	var piece = 'unicorn';
+	if (chess_piece_txt[1] in chess_pieces_names)
+		piece = chess_pieces_names[chess_piece_txt[1]];
+	return color + ' ' + piece;
+}
+
+function human_chess_move (chess_move)
+{
+	var piece = human_chess_piece(chess_move.slice(0, 2));
+	var captured = chess_move.slice(6, 8);
+	if (captured != 'no')
+		captured = 'capturing ' + human_chess_piece(captured);
+	else
+		captured = '';
+	if (chess_move[4] == 'o')
+		return piece + ' O-O ' + captured;
+	else if (chess_move[4] == 'O')
+		return piece + ' O-O-O ' + captured;
+	var square1 = chess_move.slice(2, 4);
+	var square2 = chess_move.slice(4, 6);
+	if (square1[0] > 'H') square1 = '??';
+	if (square2[0] > 'H') square2 = '??';
+	return piece + ' ' + square1 + '-' + square2 + ' ' + captured;
+}
+
+function human_list_of_moves ()
+{
+	var human_list = 'Chess Game\n' + (new Date()).toString() + '\n';
+	var moves = list_of_moves.split("\n");
+	for (var imove = 0; imove < moves.length; ++imove)
+		human_list += '\n' + human_chess_move(moves[imove]);
+	return human_list;
 }
 
 function initial_chessboard_setup ()
@@ -278,6 +322,12 @@ function piece_move (old_td_id, new_td_id)
 	sendrecv_state = -1;
 	play_piece_drop_sound();
 	console.log('Move #' + move_number + ': ' + last_square + ' (local).');
+	// Update the list of moves.
+	var tag_start = String.fromCharCode.apply(null, [squares[0][1] + "A".charCodeAt(0), squares[0][0] + "1".charCodeAt(0)]);
+	var captured = "no";
+	if (ipiece_captured > 0) captured = chess_pieces_txt[ipiece_captured];
+	if (list_of_moves.length > 0) list_of_moves += '\n';
+	list_of_moves += chess_pieces_txt[ipiece] + tag_start + tag + captured;
 	return true;
 }
 
@@ -311,22 +361,22 @@ function set_td_text (html_text, ix, iy)
 
 function send_to_server ()
 {
-    $("#warning").empty();
-    $.post( "../sendrecv", { chessboard: chessboard_to_string(), filename: filename } );
-    sendrecv_state = 5;
+	$("#warning").empty();
+	$.post( "../sendrecv", { chessboard: chessboard_to_string(), filename: filename } );
+	sendrecv_state = 5;
 }
 
 function load_from_server (manual)
 {
-    manual = manual || false;
-    if (!manual && !document.getElementById('auto_sendrecv').checked) {
-        return;
-    }
-    $("#warning").empty();
-    $.post( "../sendrecv", { filename: filename }, function( data ) {
+	manual = manual || false;
+	if (!manual && !document.getElementById('auto_sendrecv').checked) {
+		return;
+	}
+	$("#warning").empty();
+	$.post( "../sendrecv", { filename: filename }, function( data ) {
 		var old_move_number = move_number;
 		string_to_chessboard(data);
-        if (move_number > old_move_number) {
+		if (move_number > old_move_number) {
 			play_piece_drop_sound();
 			console.log('Move #' + move_number + ': ' + last_square + ' (remote).');
 		}
@@ -335,48 +385,51 @@ function load_from_server (manual)
 
 function timed_sendrecv ()
 {
-    if (sendrecv_state == 0) {
-        load_from_server();
-    } else if (sendrecv_state > 0) {
-        --sendrecv_state;
-    } else if (document.getElementById('auto_sendrecv').checked) {
-        send_to_server();
-    }
-    var now = new Date();
-    if (flipped) {
-        setTimeout(timed_sendrecv, 1500 - now.getMilliseconds());
-    } else if (now.getMilliseconds() > 500){
-        setTimeout(timed_sendrecv, 2000 - now.getMilliseconds());
-    } else {
-        setTimeout(timed_sendrecv, 1000 - now.getMilliseconds());
-    }
+	if (sendrecv_state == 0) {
+		load_from_server();
+	} else if (sendrecv_state > 0) {
+		--sendrecv_state;
+	} else if (document.getElementById('auto_sendrecv').checked) {
+		send_to_server();
+	}
+	var now = new Date();
+	if (flipped) {
+		setTimeout(timed_sendrecv, 1500 - now.getMilliseconds());
+	} else if (now.getMilliseconds() > 500){
+		setTimeout(timed_sendrecv, 2000 - now.getMilliseconds());
+	} else {
+		setTimeout(timed_sendrecv, 1000 - now.getMilliseconds());
+	}
 }
 
 // Entry point of the jQuery action
 $(function () {
-    $("#discard").click(function () {
+	$("#discard").click(function () {
 		update_chessboard(chessboard_saved);
 		update_last_square("Z0");
-    });
-    $("#save").click(function () {
-        chessboard_saved = chessboard.slice();
-    });
-    $("#send").click(function () {
-        send_to_server();
-    });
-    $("#receive").click(function () {
-        load_from_server(true);
-    });
-    $("#flip").click(function () {
-        flipped = !flipped;
+	});
+	$("#save").click(function () {
+		chessboard_saved = chessboard.slice();
+	});
+	$("#send").click(function () {
+		send_to_server();
+	});
+	$("#receive").click(function () {
+		load_from_server(true);
+	});
+	$("#flip").click(function () {
+		flipped = !flipped;
 		chessboard_to_html();
 		update_last_square(last_square);
-    });
-    $("#reset").click(function () {
+	});
+	$("#reset").click(function () {
 		initial_chessboard_setup();
 		chessboard_to_html();
 		update_last_square("Z0");
-    });
+	});
+	$("#list_of_moves").click(function () {
+		this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(human_list_of_moves());
+	});
 
 	initial_chessboard_setup();
 	chessboard_to_html();
