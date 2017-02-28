@@ -1,20 +1,23 @@
 /**
- * (c) snowfed, 2016
+ * (c) snowfed, 2017
  */
 
-var filename = 'chess_state.txt'
-var flipped = true;
-var nxsquares = 12;
-var chessboard = new Array (8 * nxsquares);
-var chessboard_saved = null;
-var chess_pieces = ["&#9812;", "&#9813;", "&#9814;", "&#9815;", "&#9816;", "&#9817;", // white
-	"&#9818;", "&#9819;", "&#9820;", "&#9821;", "&#9822;", "&#9823;"]; // black
-var chess_pieces_txt = ["white king  ", "white queen ", "white rook  ", "white bishop", "white knight", "white pawn  ", // white
-	                    "black king  ", "black queen ", "black rook  ", "black bishop", "black knight", "black pawn  "] // black
-var move_number = 0;
-var sendrecv_state = 0;
-var last_square = "Z0";
-var list_of_moves = "";
+var snowfed_chess_game = {
+	filename: 'chess_state.txt',
+	flipped: true,
+	nxsquares: 12,
+	chessboard: new Array (8 * 12), //(8 * snowfed_chess_game.nxsquares),
+	chessboard_saved: null,
+	chess_pieces: ["&#9812;", "&#9813;", "&#9814;", "&#9815;", "&#9816;", "&#9817;", // white
+		"&#9818;", "&#9819;", "&#9820;", "&#9821;", "&#9822;", "&#9823;"], // black
+	chess_pieces_txt: ["white king  ", "white queen ", "white rook  ", "white bishop", "white knight", "white pawn  ", // white
+		"black king  ", "black queen ", "black rook  ", "black bishop", "black knight", "black pawn  "], // black
+	move_number: 0,
+	sendrecv_state: 0,
+	last_square: "Z0",
+	list_of_moves: ""
+};
+
 
 function play_piece_drop_sound()
 {
@@ -25,24 +28,24 @@ function play_piece_drop_sound()
 
 function chess_state_to_string ()
 {
-	var move_bytes = [((move_number >> 6) & 0x3F) + 0x21, (move_number & 0x3F) + 0x21];
-	return String.fromCharCode.apply(null, move_bytes) + list_of_moves;
+	var move_bytes = [((snowfed_chess_game.move_number >> 6) & 0x3F) + 0x21, (snowfed_chess_game.move_number & 0x3F) + 0x21];
+	return String.fromCharCode.apply(null, move_bytes) + snowfed_chess_game.list_of_moves;
 }
 
 function string_to_chess_state (board_string)
 {
 	var imove = (board_string.charCodeAt(0) - 0x21) * 0x40 + board_string.charCodeAt(1) - 0x21;
-	if (move_number >= imove) {
+	if (snowfed_chess_game.move_number >= imove) {
 		return;
 	}
 	new_list_of_moves = board_string.slice(2);
-	chessboard_update = chessboard.slice();
-	var tag = digest_new_moves (chessboard_update, new_list_of_moves, list_of_moves);
+	chessboard_update = snowfed_chess_game.chessboard.slice();
+	var tag = digest_new_moves (chessboard_update, new_list_of_moves, snowfed_chess_game.list_of_moves);
 	if (!tag) return false;
-	list_of_moves = new_list_of_moves;
+	snowfed_chess_game.list_of_moves = new_list_of_moves;
 	update_chessboard(chessboard_update);
 	update_last_square(tag);
-	move_number = imove;
+	snowfed_chess_game.move_number = imove;
 	return true;
 }
 
@@ -59,7 +62,7 @@ function char_to_square (char_square)
 
 function human_move (square1, square2, ipiece, ipiece_captured, tag)
 {
-	str = chess_pieces_txt[ipiece] + ' ';
+	str = snowfed_chess_game.chess_pieces_txt[ipiece] + ' ';
 	if (tag) {
 		if (tag[0] == 'o')
 			str += ' O-O';
@@ -79,7 +82,7 @@ function human_move (square1, square2, ipiece, ipiece_captured, tag)
 		else
 			str += '??';
 	}
-	if (ipiece_captured >= 0) str += ' capturing ' + chess_pieces_txt[ipiece_captured];
+	if (ipiece_captured >= 0) str += ' capturing ' + snowfed_chess_game.chess_pieces_txt[ipiece_captured];
 	return str;
 }
 
@@ -88,7 +91,7 @@ function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = ""
 	var print_out = !chessboard;
 	var idiff = 0;
 	if (print_out) {
-		chessboard = new Array (8 * nxsquares);
+		chessboard = new Array (8 * snowfed_chess_game.nxsquares);
 		initial_chessboard_setup(chessboard, true);
 	} else {
 		for (idiff = 0; idiff < new_list_of_moves.length && idiff < old_list_of_moves.length; ++idiff) {
@@ -107,8 +110,8 @@ function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = ""
 		tag = null;
 		var square1 = char_to_square(new_list_of_moves[i]);
 		var square2 = char_to_square(new_list_of_moves[i+1]);
-		var isquare_old = nxsquares * square1[0] + square1[1];
-		var isquare_new = nxsquares * square2[0] + square2[1];
+		var isquare_old = snowfed_chess_game.nxsquares * square1[0] + square1[1];
+		var isquare_new = snowfed_chess_game.nxsquares * square2[0] + square2[1];
 		if (isquare_new == isquare_old) {
 			return null;
 		} else if (chessboard[isquare_old] < 0) {
@@ -161,15 +164,15 @@ function initial_chessboard_setup (chessboard, keep_move_number = false)
 	chessboard[cnt++] = 4;
 	chessboard[cnt++] = 2;
 	chessboard[cnt+3] = 1;
-	cnt = nxsquares;
+	cnt = snowfed_chess_game.nxsquares;
 	for (var i = 0; i < 8; ++i) {
 		chessboard[cnt++] = 5;
 	}
-	cnt = nxsquares * 6;
+	cnt = snowfed_chess_game.nxsquares * 6;
 	for (var i = 0; i < 8; ++i) {
 		chessboard[cnt++] = 11;
 	}
-	cnt = nxsquares * 7;
+	cnt = snowfed_chess_game.nxsquares * 7;
 	chessboard[cnt++] = 8;
 	chessboard[cnt++] = 10;
 	chessboard[cnt++] = 9;
@@ -179,21 +182,21 @@ function initial_chessboard_setup (chessboard, keep_move_number = false)
 	chessboard[cnt++] = 10;
 	chessboard[cnt++] = 8;
 	chessboard[cnt+3] = 7;
-	if (chessboard_saved == null) {
-		chessboard_saved = chessboard.slice();
+	if (snowfed_chess_game.chessboard_saved == null) {
+		snowfed_chess_game.chessboard_saved = chessboard.slice();
 	}
 	if (!keep_move_number)
-		move_number = 0;
+		snowfed_chess_game.move_number = 0;
 }
 
 function chessboard_to_html ()
 {
 	var cnt = 0;
 	for (var iy = 0; iy < 8; ++iy) {
-		for (var ix = 0; ix < nxsquares; ++ix) {
-			var ipiece = chessboard[cnt++];
+		for (var ix = 0; ix < snowfed_chess_game.nxsquares; ++ix) {
+			var ipiece = snowfed_chess_game.chessboard[cnt++];
 			if (ipiece >= 0) {
-				set_td_text(chess_pieces[ipiece], ix + 1, iy + 1);
+				set_td_text(snowfed_chess_game.chess_pieces[ipiece], ix + 1, iy + 1);
 			} else {
 				set_td_text(null, ix + 1, iy + 1);
 			}
@@ -212,7 +215,7 @@ function update_last_square (new_last_square)
 	$(".last_square").removeClass("last_square");
 	var ix = new_last_square.charCodeAt(0) - "A".charCodeAt(0) + 1;
 	var iy = new_last_square.charCodeAt(1) - "1".charCodeAt(0) + 1;
-	if (ix <= 0 || ix > nxsquares || iy <= 0 || iy > 8) {
+	if (ix <= 0 || ix > snowfed_chess_game.nxsquares || iy <= 0 || iy > 8) {
 		if (new_last_square == "oW" || new_last_square == "oB" ||
 			new_last_square == "OW" || new_last_square == "OB")
 		{
@@ -222,7 +225,7 @@ function update_last_square (new_last_square)
 			} else {
 				ix = [7, 6];
 			}
-			if (flipped) {
+			if (snowfed_chess_game.flipped) {
 				iy = 9 - iy;
 			} else {
 				ix[0] = 9 - ix[0];
@@ -230,31 +233,31 @@ function update_last_square (new_last_square)
 			}
 			$("[id = '" + iy + " " + ix[0] + "']").addClass("last_square");
 			$("[id = '" + iy + " " + ix[1] + "']").addClass("last_square");
-			last_square = new_last_square;
+			snowfed_chess_game.last_square = new_last_square;
 			return;
 		}
 		console.log("Unknown last square: " + new_last_square + ".");
 		return;
 	}
-	if (flipped) {
+	if (snowfed_chess_game.flipped) {
 		iy = 9 - iy;
 	} else if (ix <= 8) {
 		ix = 9 - ix;
 	}
 	$("[id = '" + iy + " " + ix + "']").addClass("last_square");
-	last_square = new_last_square;
+	snowfed_chess_game.last_square = new_last_square;
 }
 
 function update_chessboard (chessboard_update)
 {
 	for (var iy = 0; iy < 8; ++iy) {
-		for (var ix = 0; ix < nxsquares; ++ix) {
-			var cnt = ix + iy * nxsquares;
+		for (var ix = 0; ix < snowfed_chess_game.nxsquares; ++ix) {
+			var cnt = ix + iy * snowfed_chess_game.nxsquares;
 			var ipiece_update = chessboard_update[cnt];
-			var ipiece = chessboard[cnt];
+			var ipiece = snowfed_chess_game.chessboard[cnt];
 			if (ipiece != ipiece_update) {
-				set_td_text(( (ipiece_update >= 0) ? chess_pieces[ipiece_update] : null ), ix + 1, iy + 1);
-				chessboard[cnt] = ipiece_update;
+				set_td_text(( (ipiece_update >= 0) ? snowfed_chess_game.chess_pieces[ipiece_update] : null ), ix + 1, iy + 1);
+				snowfed_chess_game.chessboard[cnt] = ipiece_update;
 			}
 			++cnt;
 		}
@@ -264,13 +267,13 @@ function update_chessboard (chessboard_update)
 function get_empty_square (chessboard, is_white)
 {
 	for (var offset = 0; offset <= 4; offset += 4) {
-		for (var ix = nxsquares-1; ix >= 8; --ix) {
+		for (var ix = snowfed_chess_game.nxsquares-1; ix >= 8; --ix) {
 			for (var i = offset; i < 4 + offset; ++i) {
 				var iy = i;
 				if (is_white != undefined && !is_white) {
 					iy = 7 - i;
 				}
-				var isquare = iy * nxsquares + ix
+				var isquare = iy * snowfed_chess_game.nxsquares + ix
 				if (chessboard[isquare] < 0) {
 					return [isquare, ix, iy];
 				}
@@ -288,7 +291,7 @@ function try_castling (chessboard, squares, is_white)
 	var tag = 'W';
 	if (!is_white) {
 		y = 7;
-		offset = nxsquares * 7;
+		offset = snowfed_chess_game.nxsquares * 7;
 		rook_code = 8;
 		tag = 'B';
 	}
@@ -303,7 +306,7 @@ function try_castling (chessboard, squares, is_white)
 	} else {
 		tag = 'O' + tag;
 	}
-	var offset = nxsquares * y;
+	var offset = snowfed_chess_game.nxsquares * y;
 	if (chessboard[offset + irook_old] != rook_code) return null;
 	var i1 = Math.min(irook_old, squares[0][1]) + 1;
 	var i2 = Math.max(irook_old, squares[0][1]) - 1;
@@ -326,29 +329,29 @@ function piece_move (old_td_id, new_td_id)
 				return false;
 			}
 		}
-		if (flipped) {
+		if (snowfed_chess_game.flipped) {
 			squares[i][0] = 7 - squares[i][0];
 		} else {
 			if (squares[i][1] < 8) squares[i][1] = 7 - squares[i][1];
 		}
 	}
-	new_list_of_moves = list_of_moves + square_to_char(squares[0]) + square_to_char(squares[1]);
-	chessboard_update = chessboard.slice();
-	var tag = digest_new_moves (chessboard_update, new_list_of_moves, list_of_moves);
+	new_list_of_moves = snowfed_chess_game.list_of_moves + square_to_char(squares[0]) + square_to_char(squares[1]);
+	chessboard_update = snowfed_chess_game.chessboard.slice();
+	var tag = digest_new_moves (chessboard_update, new_list_of_moves, snowfed_chess_game.list_of_moves);
 	if (!tag) return false;
-	++move_number;
-	list_of_moves = new_list_of_moves;
+	++snowfed_chess_game.move_number;
+	snowfed_chess_game.list_of_moves = new_list_of_moves;
 	update_chessboard(chessboard_update);
 	update_last_square(tag);
-	sendrecv_state = -1;
+	snowfed_chess_game.sendrecv_state = -1;
 	play_piece_drop_sound();
-	console.log('Move #' + move_number + ': ' + last_square + ' (local).');
+	console.log('Move #' + snowfed_chess_game.move_number + ': ' + snowfed_chess_game.last_square + ' (local).');
 	return true;
 }
 
 function set_td_text (html_text, ix, iy)
 {
-	if (flipped) {
+	if (snowfed_chess_game.flipped) {
 		if (iy > 0) iy = 9 - iy;
 	} else {
 		if (ix >= 1 && ix <= 8) ix = 9 - ix;
@@ -374,8 +377,8 @@ function set_td_text (html_text, ix, iy)
 function send_to_server ()
 {
 	$("#warning").empty();
-	$.post( "../sendrecv", { chessboard: chess_state_to_string(), filename: filename } );
-	sendrecv_state = 5;
+	$.post( "../sendrecv", { chessboard: chess_state_to_string(), filename: snowfed_chess_game.filename } );
+	snowfed_chess_game.sendrecv_state = 5;
 }
 
 function load_from_server (manual)
@@ -385,27 +388,27 @@ function load_from_server (manual)
 		return;
 	}
 	$("#warning").empty();
-	$.post( "../sendrecv", { filename: filename }, function( data ) {
-		var old_move_number = move_number;
+	$.post( "../sendrecv", { filename: snowfed_chess_game.filename }, function( data ) {
+		var old_move_number = snowfed_chess_game.move_number;
 		string_to_chess_state(data);
-		if (move_number > old_move_number) {
+		if (snowfed_chess_game.move_number > old_move_number) {
 			play_piece_drop_sound();
-			console.log('Move #' + move_number + ': ' + last_square + ' (remote).');
+			console.log('Move #' + snowfed_chess_game.move_number + ': ' + snowfed_chess_game.last_square + ' (remote).');
 		}
 	});
 }
 
 function timed_sendrecv ()
 {
-	if (sendrecv_state == 0) {
+	if (snowfed_chess_game.sendrecv_state == 0) {
 		load_from_server();
-	} else if (sendrecv_state > 0) {
-		--sendrecv_state;
+	} else if (snowfed_chess_game.sendrecv_state > 0) {
+		--snowfed_chess_game.sendrecv_state;
 	} else if (document.getElementById('auto_sendrecv').checked) {
 		send_to_server();
 	}
 	var now = new Date();
-	if (flipped) {
+	if (snowfed_chess_game.flipped) {
 		setTimeout(timed_sendrecv, 1500 - now.getMilliseconds());
 	} else if (now.getMilliseconds() > 500){
 		setTimeout(timed_sendrecv, 2000 - now.getMilliseconds());
@@ -417,11 +420,11 @@ function timed_sendrecv ()
 // Entry point of the jQuery action
 $(function () {
 	$("#discard").click(function () {
-		update_chessboard(chessboard_saved);
+		update_chessboard(snowfed_chess_game.chessboard_saved);
 		update_last_square("Z0");
 	});
 	$("#save").click(function () {
-		chessboard_saved = chessboard.slice();
+		snowfed_chess_game.chessboard_saved = snowfed_chess_game.chessboard.slice();
 	});
 	$("#send").click(function () {
 		send_to_server();
@@ -430,20 +433,20 @@ $(function () {
 		load_from_server(true);
 	});
 	$("#flip").click(function () {
-		flipped = !flipped;
+		snowfed_chess_game.flipped = !snowfed_chess_game.flipped;
 		chessboard_to_html();
 		update_last_square(last_square);
 	});
 	$("#reset").click(function () {
-		initial_chessboard_setup(chessboard);
+		initial_chessboard_setup(snowfed_chess_game.chessboard);
 		chessboard_to_html();
 		update_last_square("Z0");
 	});
-	$("#list_of_moves").click(function () {
-		this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(digest_new_moves(null, list_of_moves));
+	$("#download_moves").click(function () {
+		this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(digest_new_moves(null, snowfed_chess_game.list_of_moves));
 	});
 
-	initial_chessboard_setup(chessboard);
+	initial_chessboard_setup(snowfed_chess_game.chessboard);
 	chessboard_to_html();
 	timed_sendrecv();
 });
