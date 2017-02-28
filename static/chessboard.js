@@ -435,7 +435,7 @@ $(function () {
 	$("#flip").click(function () {
 		snowfed_chess_game.flipped = !snowfed_chess_game.flipped;
 		chessboard_to_html();
-		update_last_square(last_square);
+		update_last_square(snowfed_chess_game.last_square);
 	});
 	$("#reset").click(function () {
 		initial_chessboard_setup(snowfed_chess_game.chessboard);
