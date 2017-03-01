@@ -10,8 +10,8 @@ var snowfed_chess_game = {
 	chessboard_saved: null,
 	chess_pieces: ["&#9812;", "&#9813;", "&#9814;", "&#9815;", "&#9816;", "&#9817;", // white
 		"&#9818;", "&#9819;", "&#9820;", "&#9821;", "&#9822;", "&#9823;"], // black
-	chess_pieces_txt: ["white king  ", "white queen ", "white rook  ", "white bishop", "white knight", "white pawn  ", // white
-		"black king  ", "black queen ", "black rook  ", "black bishop", "black knight", "black pawn  "], // black
+	chess_race: "wwwwwwbbbbbb",
+	chess_pieces_txt: "KQRBN KQRBN ",
 	move_number: 0,
 	sendrecv_state: 0,
 	last_square: "Z0",
@@ -65,25 +65,63 @@ function human_move (square1, square2, ipiece, ipiece_captured, tag)
 	str = snowfed_chess_game.chess_pieces_txt[ipiece] + ' ';
 	if (tag) {
 		if (tag[0] == 'o')
-			str += ' O-O';
+			str = '  O-O  ';
 		else if (tag[0] == 'O')
-			str += 'O-O-O';
+			str = '  O-O-O';
 		else
 			tag = null;
 	}
 	if (!tag) {
 		if (square1[1] < 8)
-			str += String.fromCharCode(square1[1] + 'A'.charCodeAt(0), square1[0] + '1'.charCodeAt(0));
+			str += String.fromCharCode(square1[1] + 'a'.charCodeAt(0), square1[0] + '1'.charCodeAt(0));
 		else
 			str += '??';
-		str += '-';
+		if (ipiece_captured >= 0)
+			str += 'x';
+		else
+			str += '-';
 		if (square2[1] < 8)
-			str += String.fromCharCode(square2[1] + 'A'.charCodeAt(0), square2[0] + '1'.charCodeAt(0));
+			str += String.fromCharCode(square2[1] + 'a'.charCodeAt(0), square2[0] + '1'.charCodeAt(0));
 		else
 			str += '??';
 	}
-	if (ipiece_captured >= 0) str += ' capturing ' + snowfed_chess_game.chess_pieces_txt[ipiece_captured];
-	return str;
+	if (snowfed_chess_game.chess_race[ipiece] == 'w') {
+		return [0, str];
+	} else {
+		if (snowfed_chess_game.chess_race[ipiece] != 'b')
+			console.log('Unknown chess race in human_move(): ' + snowfed_chess_game.chess_race[ipiece] + '.')
+		return [1, str];
+	}
+}
+
+function snowfed_game_notation (human_list_of_moves)
+{
+	var imove = 0;
+	var imove_space = '      ';
+	var white_space = '       ';
+	var black_space = '       ';
+	var last_race = 1;
+	var sgn_text = 'Chess Game\r\n' + (new Date()).toString() + '\r\n';
+	for (var i = 0; i < human_list_of_moves.length; ++i) {
+		var move = human_list_of_moves[i];
+		if (last_race == 0) {
+			if (move[0] == 0) {
+				sgn_text += '\r\n' + imove_space + move[1];
+			} else {
+				sgn_text += '  ' + move[1];
+			}
+		} else {
+			if (move[0] == 0) {
+				var imove_str = (++imove).toString();
+				imove_str = imove_space.slice(0, imove_space.length-imove_str.length-2) + imove_str + '. ';
+				sgn_text += '\r\n' + imove_str + move[1];
+			} else {
+				sgn_text += '\r\n' + imove_space + white_space + '  ' + move[1];
+			}
+		}
+		last_race = move[0];
+	}
+	return sgn_text;
 }
 
 function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = "")
@@ -103,7 +141,7 @@ function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = ""
 			idiff = 0;
 		}
 	}
-	var human_list = 'Chess Game\n' + (new Date()).toString() + '\n';
+	var human_list = [];
 	var tag;
 	var N = new_list_of_moves.length - (new_list_of_moves.length & 0b1);
 	for (var i = idiff; i < new_list_of_moves.length; i += 2) {
@@ -137,14 +175,14 @@ function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = ""
 				}
 				chessboard[empty_square[0]] = ipiece_captured;
 			}
-			if (print_out) human_list += '\n' + human_move(square1, square2, ipiece, ipiece_captured, tag);
+			if (print_out) human_list.push(human_move(square1, square2, ipiece, ipiece_captured, tag));
 		}
 		chessboard[isquare_new] = ipiece;
 		chessboard[isquare_old] = -1;
 		if (tag == null) tag = String.fromCharCode(square2[1] + "A".charCodeAt(0), square2[0] + "1".charCodeAt(0));
 	}
 	if (print_out)
-		return human_list;
+		return snowfed_game_notation(human_list);
 	else
 		return tag;
 }
@@ -443,6 +481,7 @@ $(function () {
 		update_last_square("Z0");
 	});
 	$("#download_moves").click(function () {
+		this.download = "moves-" + (new Date()).toISOString().slice(0,10) + ".sgn";
 		this.href = "data:text/plain;charset=UTF-8," + encodeURIComponent(digest_new_moves(null, snowfed_chess_game.list_of_moves));
 	});
 
