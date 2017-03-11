@@ -149,7 +149,11 @@ function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = ""
 		}
 	}
 	var human_list = [];
-	var tag;
+	var tag = 'Z0';
+	if (idiff >= 2) {
+		var square = char_to_square(new_list_of_moves[idiff-1]);
+		tag = String.fromCharCode(square[1] + "A".charCodeAt(0), square[0] + "1".charCodeAt(0));
+	}
 	var N = new_list_of_moves.length - (new_list_of_moves.length & 0b1);
 	for (var i = idiff; i < new_list_of_moves.length; i += 2) {
 		tag = null;
@@ -446,8 +450,8 @@ function load_from_server (manual)
 
 function reset_local_game_dialog ()
 {
-	auto_sendrecv_box = $('#auto_sendrecv');
-	was_checked = auto_sendrecv_box.prop("checked");
+	var auto_sendrecv_box = $('#auto_sendrecv');
+	var was_checked = auto_sendrecv_box.prop("checked");
 	if (was_checked) auto_sendrecv_box.prop("checked", false);
 	reset_confirmation = $("#reset-confirm");
 	reset_confirmation.html("<center><p>The current game will be lost.</p></center>");
@@ -477,7 +481,10 @@ function reset_local_game_dialog ()
 
 function reset_server_game_dialog ()
 {
-	reset_confirmation = $("#reset-confirm");
+	var auto_sendrecv_box = $('#auto_sendrecv');
+	var was_checked = auto_sendrecv_box.prop("checked");
+	if (was_checked) auto_sendrecv_box.prop("checked", false);
+	var reset_confirmation = $("#reset-confirm");
 	reset_confirmation.html("<center><p>The current game will be lost.</p></center>");
 	reset_confirmation.dialog({
 		dialogClass: 'no-close',
@@ -498,16 +505,20 @@ function reset_server_game_dialog ()
 							</td></tr> \
 						</table></center>");
 				snowfed_chess_game.sendrecv_state = 5;
+				snowfed_chess_game.move_number = 0;
+				snowfed_chess_game.list_of_moves = "";
 				initial_chessboard_setup(snowfed_chess_game.chessboard);
 				chessboard_to_html();
 				update_last_square("Z0");
 				send_to_server();
 				load_from_server(true);
 				setTimeout(function(){
+					if (was_checked) auto_sendrecv_box.prop("checked", true);
 					reset_confirmation.dialog("close");
 				}, 2000);
 			},
 			No: function() {
+				if (was_checked) auto_sendrecv_box.prop("checked", true);
 				reset_confirmation.dialog("close");
 			}
 		}
