@@ -160,6 +160,10 @@ td.white_square {
 	cursor: default;
 }*/
 
+.no-close .ui-dialog-titlebar-close {
+	display: none;
+}
+
 /* SNOWFED BUTTONS */
 .snowfedSkyButton {
 	-moz-box-shadow:inset 0px 1px 0px 0px #dcecfb;

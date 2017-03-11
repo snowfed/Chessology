@@ -13,6 +13,7 @@ var snowfed_chess_game = {
 	chess_race: "wwwwwwbbbbbb",
 	chess_pieces_txt: "KQRBN KQRBN ",
 	move_number: 0,
+	move_number_server: 0,
 	sendrecv_state: 0,
 	last_square: "Z0",
 	list_of_moves: ""
@@ -35,6 +36,12 @@ function chess_state_to_string ()
 function string_to_chess_state (board_string)
 {
 	var imove = (board_string.charCodeAt(0) - 0x21) * 0x40 + board_string.charCodeAt(1) - 0x21;
+	if (imove < snowfed_chess_game.move_number_server) {
+		snowfed_chess_game.move_number_server = imove;
+		reset_local_game_dialog();
+		return;
+	}
+	snowfed_chess_game.move_number_server = imove;
 	if (snowfed_chess_game.move_number >= imove) {
 		return;
 	}
@@ -416,6 +423,7 @@ function send_to_server ()
 {
 	$("#warning").empty();
 	$.post( "../sendrecv", { chessboard: chess_state_to_string(), filename: snowfed_chess_game.filename } );
+	snowfed_chess_game.move_number_server = snowfed_chess_game.move_number;
 	snowfed_chess_game.sendrecv_state = 5;
 }
 
@@ -432,6 +440,76 @@ function load_from_server (manual)
 		if (snowfed_chess_game.move_number > old_move_number) {
 			play_piece_drop_sound();
 			console.log('Move #' + snowfed_chess_game.move_number + ': ' + snowfed_chess_game.last_square + ' (remote).');
+		}
+	});
+}
+
+function reset_local_game_dialog ()
+{
+	auto_sendrecv_box = $('#auto_sendrecv');
+	was_checked = auto_sendrecv_box.prop("checked");
+	if (was_checked) auto_sendrecv_box.prop("checked", false);
+	reset_confirmation = $("#reset-confirm");
+	reset_confirmation.html("<center><p>The current game will be lost.</p></center>");
+	reset_confirmation.dialog({
+		dialogClass: 'no-close',
+		resizable: false,
+		height: "auto",
+		width: 300,
+		modal: true,
+		buttons: {
+			Yes: function() {
+				initial_chessboard_setup(snowfed_chess_game.chessboard);
+				chessboard_to_html();
+				update_last_square("Z0");
+				load_from_server(true);
+				if (was_checked) auto_sendrecv_box.prop("checked", true);
+				reset_confirmation.dialog("close");
+			},
+			No: function() {
+				send_to_server();
+				if (was_checked) auto_sendrecv_box.prop("checked", true);
+				reset_confirmation.dialog("close");
+			}
+		}
+	});
+}
+
+function reset_server_game_dialog ()
+{
+	reset_confirmation = $("#reset-confirm");
+	reset_confirmation.html("<center><p>The current game will be lost.</p></center>");
+	reset_confirmation.dialog({
+		dialogClass: 'no-close',
+		resizable: false,
+		height: "auto",
+		width: 300,
+		modal: true,
+		buttons: {
+			Yes: function() {
+				reset_confirmation.dialog('widget').find(".ui-dialog-buttonset button").button('disable');
+				reset_confirmation.html(" \
+						<center><table style='text-align: center; vertical-align: middle;'><tr> \
+							<td> \
+								<img src='/static/loading_icon.gif'/> \
+							</td> \
+							<td style='padding-left:0.5em'> \
+								<p>Syncing...</p> \
+							</td></tr> \
+						</table></center>");
+				snowfed_chess_game.sendrecv_state = 5;
+				initial_chessboard_setup(snowfed_chess_game.chessboard);
+				chessboard_to_html();
+				update_last_square("Z0");
+				send_to_server();
+				load_from_server(true);
+				setTimeout(function(){
+					reset_confirmation.dialog("close");
+				}, 2000);
+			},
+			No: function() {
+				reset_confirmation.dialog("close");
+			}
 		}
 	});
 }
@@ -476,9 +554,7 @@ $(function () {
 		update_last_square(snowfed_chess_game.last_square);
 	});
 	$("#reset").click(function () {
-		initial_chessboard_setup(snowfed_chess_game.chessboard);
-		chessboard_to_html();
-		update_last_square("Z0");
+		reset_server_game_dialog();
 	});
 	$("#download_moves").click(function () {
 		this.download = "moves-" + (new Date()).toISOString().slice(0,10) + ".sgn";

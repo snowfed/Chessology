@@ -3,9 +3,10 @@
 
 <head>
 	<meta charset="utf-8">
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 	<link rel="stylesheet" href="/static/chessboard.css">
-	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-	<script type="text/javascript" src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script type="text/javascript" src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 	<script src="/static/chessboard.js"></script>
 </head>
 <body>
@@ -147,15 +148,18 @@
 		</tr>
 	</table>
 
+	<div id="reset-confirm" style="display: none;" title="Reset the chessboard?">
+	</div>
+
 	<div align="left">
 		<p class="text-success text-center" id="success"></p>
 		<div id="buttons">
+			<button class="snowfedSkyButton" id="reset">Reset</button>
 			<button class="snowfedSkyButton" id="send">Send</button>
 			<button class="snowfedSkyButton" id="receive">Receive</button>
 			<button class="snowfedSkyButton" id="save">Save</button>
 			<button class="snowfedSkyButton" id="discard">Discard Changes</button>
 			<button class="snowfedSkyButton" id="flip">Flip Sides</button>
-			<button class="snowfedSkyButton" id="reset">Reset</button>
 		</div>
         <input type="checkbox" id="auto_sendrecv"/>
         <label for="auto_sendrecv"><font size="4" color="#3366FF">Automatic Send/Receive</font></label>
