@@ -463,6 +463,8 @@ function reset_local_game_dialog ()
 		modal: true,
 		buttons: {
 			Yes: function() {
+				snowfed_chess_game.move_number = 0;
+				snowfed_chess_game.list_of_moves = "";
 				initial_chessboard_setup(snowfed_chess_game.chessboard);
 				chessboard_to_html();
 				update_last_square("Z0");
