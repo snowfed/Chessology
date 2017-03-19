@@ -427,7 +427,6 @@ function send_to_server ()
 {
 	$("#warning").empty();
 	$.post( "../sendrecv", { chessboard: chess_state_to_string(), filename: snowfed_chess_game.filename } );
-	snowfed_chess_game.move_number_server = snowfed_chess_game.move_number;
 	snowfed_chess_game.sendrecv_state = 5;
 }
 
