@@ -13,10 +13,13 @@ var snowfed_chess_game = {
 	chess_race: "wwwwwwbbbbbb",
 	chess_pieces_txt: "KQRBN KQRBN ",
 	move_number: 0,
-	move_number_server: 0,
+	game_id: null, // uninitialized
+	frame_id: 0, // number of steps back from the latest chess move (currently unused)
 	sendrecv_state: 0,
 	last_square: "Z0",
-	list_of_moves: ""
+	list_of_moves: "",
+	standard_number_length: 2, // number of bytes
+	standard_message_length: 4, // number of bytes (symbols)
 };
 
 
@@ -27,25 +30,72 @@ function play_piece_drop_sound()
 	}
 }
 
+function num2str (number)
+{
+	var res = '';
+	if (number == null) return;
+	while (number > 0) {
+		res = String.fromCharCode(number & 0xFF) + res;
+		number >>= 8;
+	}
+	return res;
+}
+
+function str2num (str_number)
+{
+	var res = 0;
+	for (var i = 0; i < str_number.length; ++i) {
+		res = (res << 8) + str_number.charCodeAt(i);
+	}
+	return res;
+}
+
+function num2str_fixed (number, length)
+{
+	var res = num2str(number);
+	if (res.length > length) {
+		console.log('Overflow in num2str_fixed!', length, res.length, number);
+		return num2str((256 << ((length-1)<<3)) - 1);
+	}
+	return '\0'.repeat(length-res.length) + res;
+}
+
 function chess_state_to_string ()
 {
-	var move_bytes = [((snowfed_chess_game.move_number >> 6) & 0x3F) + 0x21, (snowfed_chess_game.move_number & 0x3F) + 0x21];
-	return String.fromCharCode.apply(null, move_bytes) + snowfed_chess_game.list_of_moves;
+	if (snowfed_chess_game.game_id == null) { // generate a random new game id
+		var id_limit = (1 << (8 << snowfed_chess_game.standart_number_length)); // 8^num_bytes
+		snowfed_chess_game.game_id = Math.floor((Math.random() * id_limit) + 1);
+	}
+	var numbers = [snowfed_chess_game.game_id, snowfed_chess_game.move_number, snowfed_chess_game.frame_id];
+	var chess_string = "";
+	for (var i = 0; i < numbers.length; ++i)
+		chess_string += num2str_fixed(numbers[i], snowfed_chess_game.standard_number_length);
+	chess_string += '?'.repeat(snowfed_chess_game.standard_message_length);
+	chess_string += snowfed_chess_game.list_of_moves;
+	return chess_string;
 }
 
 function string_to_chess_state (board_string)
 {
-	var imove = (board_string.charCodeAt(0) - 0x21) * 0x40 + board_string.charCodeAt(1) - 0x21;
-	if (imove < snowfed_chess_game.move_number_server) {
-		snowfed_chess_game.move_number_server = imove;
-		reset_local_game_dialog();
+	// Extract data.
+	var numbers = new Array (3); // [game_id, move_id, frame_id]
+	var k = snowfed_chess_game.standard_number_length;
+	for (var i = 0; i < numbers.length; ++i)
+		numbers[i] = str2num(board_string.slice(i*k, (i+1)*k));
+	var m = k * numbers.length;
+	var message = board_string.slice(m, m + snowfed_chess_game.standard_message_length);
+	var new_list_of_moves = board_string.slice(m + snowfed_chess_game.standard_message_length);
+	var game_id = numbers[0];
+	var imove = numbers[1]; // to be renamed into move_id
+	// New game or not.
+	if (game_id != snowfed_chess_game.game_id) { // Chess position at the server has a different ID.
+		reset_local_game_dialog(game_id); // (probably) Replace with a choice of what to reset (local, remote, none).
 		return;
 	}
-	snowfed_chess_game.move_number_server = imove;
 	if (snowfed_chess_game.move_number >= imove) {
 		return;
 	}
-	new_list_of_moves = board_string.slice(2);
+	// Update the position.
 	chessboard_update = snowfed_chess_game.chessboard.slice();
 	var tag = digest_new_moves (chessboard_update, new_list_of_moves, snowfed_chess_game.list_of_moves);
 	if (!tag) return false;
@@ -447,7 +497,7 @@ function load_from_server (manual)
 	});
 }
 
-function reset_local_game_dialog ()
+function reset_local_game_dialog (game_id)
 {
 	var auto_sendrecv_box = $('#auto_sendrecv');
 	var was_checked = auto_sendrecv_box.prop("checked");
@@ -462,6 +512,7 @@ function reset_local_game_dialog ()
 		modal: true,
 		buttons: {
 			Yes: function() {
+				snowfed_chess_game.game_id = game_id;
 				snowfed_chess_game.move_number = 0;
 				snowfed_chess_game.list_of_moves = "";
 				initial_chessboard_setup(snowfed_chess_game.chessboard);
@@ -505,6 +556,10 @@ function reset_server_game_dialog ()
 								<p>Syncing...</p> \
 							</td></tr> \
 						</table></center>");
+				if (snowfed_chess_game.game_id != null) {
+					snowfed_chess_game.game_id = (snowfed_chess_game.game_id + 1) %
+						(1 << (8 << snowfed_chess_game.standart_number_length)); // 8^num_bytes
+				}
 				snowfed_chess_game.sendrecv_state = 5;
 				snowfed_chess_game.move_number = 0;
 				snowfed_chess_game.list_of_moves = "";
