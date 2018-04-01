@@ -1,5 +1,5 @@
 /**
- * (c) snowfed, 2017
+ * (c) snowfed, 2018
  */
 
 var snowfed_chess_game = {
@@ -67,6 +67,9 @@ function chess_state_to_string ()
 		snowfed_chess_game.game_id = Math.floor((Math.random() * id_limit) + 1);
 	}
 	var numbers = [snowfed_chess_game.game_id, snowfed_chess_game.move_number, snowfed_chess_game.frame_id];
+	if ($('#debug_mode').prop("checked")) {
+		console.log('IDs (send):', numbers[0], numbers[1], numbers[2]);
+	}
 	var chess_string = "";
 	for (var i = 0; i < numbers.length; ++i)
 		chess_string += num2str_fixed(numbers[i], snowfed_chess_game.standard_number_length);
@@ -87,6 +90,12 @@ function string_to_chess_state (board_string)
 	var new_list_of_moves = board_string.slice(m + snowfed_chess_game.standard_message_length);
 	var game_id = numbers[0];
 	var imove = numbers[1]; // to be renamed into move_id
+	if ($('#debug_mode').prop("checked")) {
+		console.log('IDs (begin): %d(%d) %d(%d) %d(%d)',
+				snowfed_chess_game.game_id, numbers[0],
+				snowfed_chess_game.move_number, numbers[1],
+				snowfed_chess_game.frame_id, numbers[2]);
+	}
 	// New game or not.
 	if (game_id != snowfed_chess_game.game_id) { // Chess position at the server has a different ID.
 		reset_local_game_dialog(game_id); // (probably) Replace with a choice of what to reset (local, remote, none).
@@ -98,11 +107,17 @@ function string_to_chess_state (board_string)
 	// Update the position.
 	chessboard_update = snowfed_chess_game.chessboard.slice();
 	var tag = digest_new_moves (chessboard_update, new_list_of_moves, snowfed_chess_game.list_of_moves);
+	if ($('#debug_mode').prop("checked") && !tag) {
+		console.log('Indigestion: ', tag);
+	}
 	if (!tag) return false;
 	snowfed_chess_game.list_of_moves = new_list_of_moves;
 	update_chessboard(chessboard_update);
 	update_last_square(tag);
 	snowfed_chess_game.move_number = imove;
+	if ($('#debug_mode').prop("checked")) {
+		console.log('IDs (end):', snowfed_chess_game.game_id, snowfed_chess_game.move_number, snowfed_chess_game.frame_id);
+	}
 	return true;
 }
 
@@ -613,6 +628,14 @@ $(function () {
 		send_to_server();
 	});
 	$("#receive").click(function () {
+		// BEGIN DEBUG FIXME (MAGIC)
+		snowfed_chess_game.sendrecv_state = 5;
+		snowfed_chess_game.move_number = -1;
+		snowfed_chess_game.list_of_moves = "";
+		initial_chessboard_setup(snowfed_chess_game.chessboard);
+		chessboard_to_html();
+		update_last_square("Z0");
+		// END DEBUG FIXME (MAGIC)
 		load_from_server(true);
 	});
 	$("#flip").click(function () {
