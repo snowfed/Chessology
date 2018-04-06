@@ -628,14 +628,6 @@ $(function () {
 		send_to_server();
 	});
 	$("#receive").click(function () {
-		// BEGIN DEBUG FIXME (MAGIC)
-		snowfed_chess_game.sendrecv_state = 5;
-		snowfed_chess_game.move_number = -1;
-		snowfed_chess_game.list_of_moves = "";
-		initial_chessboard_setup(snowfed_chess_game.chessboard);
-		chessboard_to_html();
-		update_last_square("Z0");
-		// END DEBUG FIXME (MAGIC)
 		load_from_server(true);
 	});
 	$("#flip").click(function () {

@@ -30,13 +30,13 @@ def handle_sendrecv():
     filename = os.path.join(bottle_app_dir, filename)
     text_board = request.forms.get('chessboard')
     if text_board == None or text_board == '':
-        text_file = open(filename, 'r')
-        text_board = text_file.read()
+        text_file = open(filename, 'rb')
+        text_board = text_file.read().decode('ascii')
         text_file.close()
         return text_board
     else:
-        text_file = open(filename, "w")
-        text_file.write(text_board)
+        text_file = open(filename, "wb")
+        text_file.write(bytearray(text_board, 'ascii'))
         text_file.close()
 
 @route('/george')
