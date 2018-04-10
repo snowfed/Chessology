@@ -617,6 +617,10 @@ function timed_sendrecv ()
 
 // Entry point of the jQuery action
 $(function () {
+	$("#moves_td").click(function () {
+		$(this).children().toggle();
+		$("#list_of_moves").toggle();
+	});
 	$("#discard").click(function () {
 		update_chessboard(snowfed_chess_game.chessboard_saved);
 		update_last_square("Z0");

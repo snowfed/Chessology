@@ -105,6 +105,27 @@
 	background:-webkit-gradient(linear,0 0, 0 100%, from(#AAC8AA), to(#C6E5C6));
 }
 
+#moves_td {
+	background-color: white;
+	border-color: #ddd;
+	text-align: center;
+	vertical-align: middle;
+}
+
+#list_of_moves {
+	background-color: white;
+	border-style: solid;
+	border-color: #ddd;
+	border-width: 1px;
+	position: absolute;
+	top: 71px;
+	left: 567px;
+	width: 246px;
+	height: 494px;
+	text-align: center;
+	display: none;
+}
+
 /*.over-red {
     border-color: red;
 }
