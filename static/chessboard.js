@@ -166,34 +166,80 @@ function human_move (square1, square2, ipiece, ipiece_captured, tag)
 	}
 }
 
-function snowfed_game_notation (human_list_of_moves)
+function snowfed_game_notation (human_list_of_moves, rebuild_html = null)
 {
+	// rebuild_html:
+	//		null - leaved html untouched
+	//		true - rebuild html from scratch
+	//		false - append to html
 	var imove = 0;
-	var imove_space = '      ';
-	var white_space = '       ';
-	var black_space = '       ';
+	var moves_div = $("#list_of_moves");
+	var moves_html = "";
+	var imove_space = "      ";
+	var white_space = "       ";
+	var black_space = "       ";
 	var last_race = 1;
-	var sgn_text = 'Chess Game\r\n' + (new Date()).toString() + '\r\n';
+	if (rebuild_html != null) {
+		if (rebuild_html) {
+			moves_html += "<table>";
+		} else {
+			var first_move = human_list_of_moves[0];
+			var last_row = $("#list_of_moves table tr:last");
+			var ntd = last_row.children("td").length;
+			if (ntd < 3) {
+				if (first_move[0] == 0) {
+					last_row.append("<td></td>"); // no black move
+					last_race = 0;
+				} else {
+					last_row.append("<td>" + first_move[1] + "</td>");
+					human_list_of_moves = human_list_of_moves.slice(1);
+				}
+			}
+			imove = parseInt($("#list_of_moves table tr:last td:first").children().first().html(), 10);
+		}
+	}
+	var sgn_text = "Chess Game\r\n" + (new Date()).toString() + "\r\n";
+	var imove_str = imove.toString();
 	for (var i = 0; i < human_list_of_moves.length; ++i) {
 		var move = human_list_of_moves[i];
 		if (last_race == 0) {
 			if (move[0] == 0) {
-				sgn_text += '\r\n' + imove_space + move[1];
+				if (i > 0)
+					moves_html += "</tr>";
+				sgn_text += "\r\n" + imove_space + move[1];
+				moves_html += "\n<tr> <td><span style='display: none;'>" + imove_str + "</span></td> <td>" + move[1] + "</td>";
 			} else {
-				sgn_text += '  ' + move[1];
+				sgn_text += "  " + move[1];
+				moves_html += " <td>" + move[1] + "</td>";
 			}
 		} else {
+			if (i > 0)
+				moves_html += "</tr>";
 			if (move[0] == 0) {
-				var imove_str = (++imove).toString();
-				imove_str = imove_space.slice(0, imove_space.length-imove_str.length-2) + imove_str + '. ';
-				sgn_text += '\r\n' + imove_str + move[1];
+				imove_str = (++imove).toString();
+				imove_str = imove_space.slice(0, imove_space.length-imove_str.length-2) + imove_str + ". ";
+				sgn_text += "\r\n" + imove_str + move[1];
+				moves_html += "\n<tr> <td><span>" + imove_str + "</span></td> <td>" + move[1] + "</td>";
 			} else {
-				sgn_text += '\r\n' + imove_space + white_space + '  ' + move[1];
+				sgn_text += "\r\n" + imove_space + white_space + "  " + move[1];
+				moves_html += "\n<tr> <td><span style='display: none;'>" + imove_str + "</span></td> <td></td> <td>" + move[1] + "</td>";
 			}
 		}
 		last_race = move[0];
 	}
-	return sgn_text;
+	if (rebuild_html != null) {
+		if (human_list_of_moves.length > 0)
+			moves_html += "</tr>";
+		if (rebuild_html) {
+			moves_html += "</table>";
+			moves_div.html(moves_html);
+		} else {
+			moves_div.children("table").append(moves_html);
+		}
+		moves_div.scrollTop(moves_div.prop("scrollHeight"));
+	} else {
+		return sgn_text;
+	}
 }
 
 function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = "")
@@ -251,7 +297,7 @@ function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = ""
 				}
 				chessboard[empty_square[0]] = ipiece_captured;
 			}
-			if (print_out) human_list.push(human_move(square1, square2, ipiece, ipiece_captured, tag));
+			human_list.push(human_move(square1, square2, ipiece, ipiece_captured, tag));
 		}
 		chessboard[isquare_new] = ipiece;
 		chessboard[isquare_old] = -1;
@@ -259,8 +305,10 @@ function digest_new_moves (chessboard, new_list_of_moves, old_list_of_moves = ""
 	}
 	if (print_out)
 		return snowfed_game_notation(human_list);
-	else
+	else {
+		snowfed_game_notation(human_list, (idiff == 0));
 		return tag;
+	}
 }
 
 function initial_chessboard_setup (chessboard, keep_move_number = false)
