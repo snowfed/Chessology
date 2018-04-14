@@ -370,6 +370,7 @@ function chessboard_to_html ()
 	for (var iy = 1; iy < 9; ++iy) {
 		set_td_text(iy, 0, iy);
 	}
+	$("#list_of_moves").html("<p>The list of moves will appear here.</p>");
 }
 
 function update_last_square (new_last_square)

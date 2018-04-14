@@ -109,11 +109,17 @@
 	background-color: white;
 	border-color: #ddd;
 	text-align: center;
+	font-size: 24px;
 	vertical-align: middle;
 }
 
+#moves_td p {
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+
 #list_of_moves {
-	background-color: white;
+	background: rgb(255,255,255,0.9);
 	color: black;
 	border-style: solid;
 	border-color: #ddd;
@@ -123,6 +129,8 @@
 	left: 567px;
 	width: 246px;
 	height: 494px;
+	text-align: center;
+	font-size: 18px;
 	overflow: auto;
 	display: none;
 }
@@ -130,6 +138,7 @@
 #list_of_moves table {
 	margin-left: auto;
 	margin-right: auto;
+	text-align: right;
 }
 
 /*.over-red {
